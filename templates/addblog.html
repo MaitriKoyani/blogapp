@@ -1,0 +1,53 @@
+{% extends "index.html" %}
+
+{% block maintitle %}
+
+    Addblog
+        
+{% endblock %}
+
+{% block title %}
+
+    <!-- add title -->
+    Add your blog here!
+        
+{% endblock %}
+
+{% block body %}
+
+    <!-- add body -->
+    <form action="#" method="POST" id="login-form" class="row g-3 fs-5 m-3 text-start" enctype="multipart/form-data">
+        <div class="fw-bold">{{msg}}</div>
+        <div class="col-12 ">
+            <label for="ititle" class="col-sm-2 col-form-label fw-bold">Title</label>
+            <div class="col-sm-10">
+            <input type="text" class="form-control" id="ititle" name="title" required>
+            </div>
+        </div>
+        <div class="col-12">
+            <label for="iimg" class="col-sm-2 col-form-label fw-bold mb-3">Image</label>
+            
+            <!-- <div class="col-6 ms-5">Image upload
+            
+            <input type="file" class="form-control" id="iimg" name="file" >
+            </div><div class="col-6 ms-5 text-center">or</div> -->
+            <div class="col-6 ms-5">Enter url
+    
+            <input type="url" class="form-control" id="iimg" name="img" >
+            </div>
+        </div>
+        <div class="col-12 ">
+            <label for="ides" class="col-sm-2 col-form-label fw-bold">Description</label>
+            <div class="col-sm-10">
+            <input type="text" class="form-control" id="ides" name="description" required>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <button type="submit" class="btn" style="background-color:rgb(192, 103, 87);">Submit</button>
+        </div>
+    </form>
+    <a href="/blog" class="btn text-dark fw-bold mb-3 position-absolute top-0 start-0">-> back</a> 
+
+{% endblock %}
+

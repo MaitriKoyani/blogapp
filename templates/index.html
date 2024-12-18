@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block maintitle %}
+
+        Blogapp
+            
+    {% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <style>
+        body{
+            
+            background-image: url("https://img.freepik.com/free-vector/hand-painted-pastel-coloured-watercolour-background-design_1048-19610.jpg?semt=ais_hybrid");
+            height: 900px;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <h2 class="text-center m-3 p-3 ">
+            {% block title %}
+    
+                <!-- add title -->
+                Welcome in the World!
+    
+            {% endblock %}
+        </h2>
+        <div class="h-75 w-50 d-inline-block text-center  top-50 start-50 position-absolute translate-middle border border-secondary border-3 rounded-3 shadow p-5 m-2 ">
+            {% block body %}
+
+            <h4>Login if you have an account<br><a href="/login" class="btn btn-secondary m-2">Login</a></h4>
+            <h4>Register if you are new<br><a href="/register" class="btn btn-secondary m-2">Register</a></h4>
+            <h2>OR</h2>
+            <h4>View as <a href="/guesthome" class="btn btn-secondary m-2">Guest</a></h4>
+            {% endblock %}
+        </div>
+        
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+</body>
+</html>
