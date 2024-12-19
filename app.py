@@ -248,10 +248,6 @@ def delaccount():
     # render_template('popup.html',msg=msg)
     return redirect(url_for('index'))
 
-# @app.route('/editlike<int:id>')
-# def editlike(id):
-#     count=1
-#     if count%2==0:
 
 
 if __name__ == '__main__':
