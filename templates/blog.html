@@ -14,31 +14,33 @@
         }
     </style>
 </head>
-<body style="background-color: rgba(33, 27, 27, 0.915);">
+<body style="background-image: url(https://img.freepik.com/free-vector/hand-painted-pastel-coloured-watercolour-background-design_1048-19610.jpg?semt=ais_hybrid); background-repeat: no-repeat; background-size: cover;">
     <nav class="navbar navbar-light border border-2 border-secondary" style="background-color: #796c709f; opacity: 0.9;">
         <div class="container-fluid mx-4">
             <a class="navbar-brand ms-3 " href="/profile">
-                <img src="https://i.pinimg.com/originals/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg" alt="" width="30" height="24" class="avtar">
+                <img src="{{pic}}" alt="" width="30" height="24" class="avtar">
                 {{username}}
             </a>
+            
             <div class="d-flex pe-5">
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary ms-2 text-dark fs-5">Logout</a>
             </div>  
         </div>
     </nav>
-    <div class="text-center m-3" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 40px; color: rgba(224, 138, 224, 0.929); ">My Blogs</div>
+    <div class="text-center m-3" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 40px; color: rgba(50, 18, 50, 0.929); ">My Blogs</div>
     
     <div class="container">
         {% if coun>0 %}
-        <div class="position-absolute top-50 end-0 fs-3"><a href="{{url_for('addblog')}}" class="btn btn-outline-light m-5">+ Add blogs</a></div>
+        <div class="position-absolute top-50 end-0 fs-3"><a href="{{url_for('addblog')}}" class="btn btn-outline-secondary me-5">+ Add blogs</a></div>
         <div class="row">
             {% for b in blog %}
-            <div class="d-inline-block border border-2  m-2 rounded" style="background-image: url({{b.img}});height: 400px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(72, 58, 58);">
+            <div class="d-inline-block border border-2  m-2 rounded fw-bold" style="background-image: url({{b.img}});height: 400px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);">
                 
                 <h5 class="">{{b.title}}</h5>
                 <p class="">{{b.description}}</p>
-                <a>❤️{{b.likes}} likes</a>
-                <a href="/delblog/{{b.id}}">🧹</a>       
+                <a>🤍{{b.likes}} likes</a><br>
+                <a href="/delblog/{{b.id}}" >🧹 delete</a>
+                <a href="/editblog/{{b.id}}">🖊️ edit</a>       
             </div>
             {% endfor %}
         </div>

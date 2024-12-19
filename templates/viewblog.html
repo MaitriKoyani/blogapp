@@ -1,0 +1,59 @@
+{% extends 'home.html' %}
+
+{% block head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<style>
+    .icon {
+      font-size: 15px;
+      color: white; 
+      text-shadow: 0 0 2px black; 
+      cursor: pointer;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .red-outline {
+      color: red;
+      text-shadow: 0 0 2px black;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+    <a class="navbar-brand ms-3 " href="/profile">
+        {% if username!= '' %}
+        <img src="{{pc}}" alt="img" width="30" height="24" class="avtar">
+        {% else %}
+        <img src="https://i.pinimg.com/originals/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg" alt="img" width="30" height="24" class="avtar">
+        {% endif %}
+
+        {% if username!= '' %}
+        {{username}}
+        {% else %}
+        Guest
+        {% endif %}
+    </a>
+{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <div class="top-50 start-50 position-absolute translate-middle h-50 ">
+        <div class="card" style="width: 18rem;">
+            <img src="{{b.img}}" class="card-img-top " alt="...">
+            <div class="card-body">
+              <h5 class="card-title">{{b.title}}</h5>
+              <p class="card-text">{{b.description}}</p>
+              <!-- <a href="/editlike/{{b.id}}"><i class="fas fa-heart icon m-2" id="toggle-icon"></i> </a>{{b.likes}} likes -->
+              <script>
+                const iconElement = document.getElementById('toggle-icon');
+
+                iconElement.addEventListener('click', () => {
+                  iconElement.classList.toggle('red-outline');
+                });
+              </script>
+              
+            </div>
+          </div>
+    </div>
+
+{% endblock %}

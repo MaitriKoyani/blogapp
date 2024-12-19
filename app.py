@@ -2,7 +2,7 @@ from flask import Flask,render_template,request,make_response,session,redirect,u
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import login_manager,LoginManager
-
+import random
 
 app=Flask(__name__)
 app= Flask(__name__)
@@ -47,7 +47,7 @@ with app.app_context():
 @app.route('/')
 def index():
     if 'username' in session:
-        return redirect(url_for('userhome'))
+        return redirect(url_for('home'))
     else:
         return render_template('index.html')
 
@@ -60,7 +60,7 @@ def register():
         email=User.query.filter_by(email=request.form['email']).first()
         if user and email:
             if user.username==email.username:
-                if user.password==request.form['password']:
+                if bcry.check_password_hash (user.password, request.form['password']):
                     msg=' is already registered , please login!'
                     return render_template('popup.html',msg=msg,username=user.username)
                 else:
@@ -79,13 +79,22 @@ def register():
                 return render_template('popup.html',msg=msg)
         else:
             user=User(username=request.form['username'],email=request.form['email'],password=bcry.generate_password_hash(request.form['password']).decode('utf-8'))
+            
             db.session.add(user)
+            db.session.commit()
+            pid=(user.username)+'_'+str(random.randrange(1,99999,2))+str(random.randrange(1,99999,2))
+            pic='https://i.pinimg.com/736x/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg'
+            bio='Hey! There i am using Blogapp'
+
+            profile=Profile(profile_id=pid,pic=pic,bio=bio,user_id=user.id)
+
+            db.session.add(profile)
             db.session.commit()
             
             msg=' registration successful'
             session['username']=user.username                                                                                               
             render_template('popup.html',msg=msg)
-            return render_template('userhome.html',username=user.username)
+            return redirect(url_for('home'))
     else:
         return render_template('register.html',msg=msg)
 
@@ -101,7 +110,7 @@ def login():
                 msg=' login successful'
                 session['username']=user.username
                         
-                return redirect(url_for('userhome'))
+                return redirect(url_for('home'))
             else:
                 msg='Wrong password!'
                 return render_template('login.html',msg=msg)
@@ -118,51 +127,132 @@ def logout():
     render_template('popup.html',msg=msg)
     return redirect(url_for('login'))
     
-@app.route("/userhome")
-def userhome():   
-    user=User.query.filter_by(username=session['username']).first()
-    profile=Profile.query.filter_by(user_id=user.id).first()
-    blog=Blog
-    return render_template('userhome.html',blog=blog,username=user.username)
 
-@app.route("/guesthome")
-def guesthome():
+@app.route('/home')
+def home(): 
     blog=Blog.query.all()
-    print(blog)
-    return render_template('guesthome.html',blog=blog)
+    if 'username' in session:
+        user=User.query.filter_by(username=session['username']).first()
+        p=Profile.query.filter_by(user_id=user.id).first()
+        print(p,user.id)
+        bl=[]
+        for b in blog:
+            if b.user_id!=user.id:
+                bl.append(b)
+        try:
+            pic=p.pic
+        except Exception as e:
+            pic='https://i.pinimg.com/originals/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg'
+        
+        return render_template('home.html',blog=bl,username=user.username,pic=pic)
+    else:
+       
+        return render_template('home.html',blog=blog,username='')
+
+
+
 
 @app.route("/profile")
 def profile():
-    return render_template('profile.html',username=session['username'])
+    if 'username' in session:
+        user=User.query.filter_by(username=session['username']).first()
+        profile=Profile.query.filter_by(user_id=user.id).first()
+        
+        return render_template('profile.html',username=user.username,profile=profile)
+    else:
+        return redirect(url_for('login'))
+@app.route("/changeProfile",methods=["GET", "POST"])
+def changeProfile():
+    user=User.query.filter_by(username=session['username']).first()
+    profile=Profile.query.filter_by(user_id=user.id).first()
+    if request.method=='POST':
+        profile.profile_id=request.form['pid']
+        profile.pic=request.form['pic']
+        profile.bio=request.form['bio']
+        db.session.commit()
+        return redirect(url_for('profile'))
+    
+    return render_template('changeprofile.html',p=profile)
 
 @app.route("/blog")
 def blog():
     user=User.query.filter_by(username=session['username']).first()
     blog=Blog.query.filter_by(user_id=user.id).all()
+    p=Profile.query.filter_by(user_id=user.id).first()
     try: 
         
         coun=len(blog)
         
     except TypeError:
         coun=0
-    return render_template('blog.html',blog=blog,coun=coun,username=user.username)
+    
+    pic=p.pic
+    
+        
+    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic)
 
 @app.route('/addblog',methods=['POST','GET'])
 def addblog():
     if request.method == 'POST':
         user=User.query.filter_by(username=session['username']).first()
         
-        blog=Blog(title=request.form['title'],img=request.form['img'],description=request.form['description'],likes=0,user_id=user.id)
+        blog=Blog(title=request.form['titl'],img=request.form['img'],description=request.form['description'],likes=0,user_id=user.id)
         db.session.add(blog)
         db.session.commit()
         return redirect(url_for('blog'))
-    return render_template('addblog.html')
+    return render_template('addblog.html',b='',title='')
+
+@app.route('/editblog/<int:id>',methods=['POST','GET'])
+def editblog(id):
+    b=Blog.query.filter_by(id=id).first()
+    if request.method == 'POST':
+        
+        b.title=request.form['titl']
+        b.img=request.form['img']
+        b.description=request.form['description']
+        
+        db.session.commit()
+        return redirect(url_for('blog'))
+    return render_template('addblog.html',b=b,title=b.title)
+
 @app.route('/delblog/<int:id>',methods=['GET'])
 def delblog(id):
     blog=Blog.query.filter_by(id=id).first()
     db.session.delete(blog)
     db.session.commit()
     return redirect(url_for('blog'))
+
+@app.route('/viewblog/<int:id>')
+def viewblog(id):
+    blog=Blog.query.filter_by(id=id).first()
+    user=User.query.filter_by(username=session['username']).first()
+    pic=Profile.query.filter_by(user_id=user.id).first()
+    
+    return render_template('viewblog.html',b=blog,pc=pic.pic,username=user.username)
+@app.route('/delaccount')
+def delaccount():
+    
+    user=User.query.filter_by(username=session['username']).first()
+    blog=Blog.query.filter_by(user_id=user.id).all()
+    for b in blog:
+        b.user_id=0
+        db.session.commit()
+    profile=Profile.query.filter_by(user_id=user.id).all()
+    for b in profile:
+        b.user_id=0
+        db.session.commit()
+    db.session.delete(user)
+    db.session.commit()
+    session.pop('username', None)
+    msg='Account deleted'
+    # render_template('popup.html',msg=msg)
+    return redirect(url_for('index'))
+
+# @app.route('/editlike<int:id>')
+# def editlike(id):
+#     count=1
+#     if count%2==0:
+
 
 if __name__ == '__main__':
     app.run(debug=True)
