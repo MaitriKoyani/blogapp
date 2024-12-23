@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request,make_response,session,redirect,url_for
+from flask import Flask,render_template,request,session,redirect,url_for,flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import login_manager,LoginManager
@@ -70,9 +70,6 @@ class Profile(db.Model):
 with app.app_context():
     db.create_all()
 
-# @login_manager.user_loader
-# def loader_user(user_id):
-#     return User.query.get(user_id)
 
 @app.route('/')
 def index():
@@ -91,22 +88,22 @@ def register():
         if user and email:
             if user.username==email.username:
                 if bcry.check_password_hash (user.password, request.form['password']):
-                    msg=' is already registered , please login!'
-                    return render_template('popup.html',msg=msg,username=user.username)
+                    flash('User is already registered!')
+                    return redirect(url_for('home'))
                 else:
-                    msg='Password is wrong but user exists so please login!'
-                    return render_template('popup.html',msg=msg)
+                    flash('Password is wrong but user exists so please login!')
+                    return render_template('register.html')
             else:
-                msg='Please change your username and email both are exists!'
-                return render_template('popup.html',msg=msg)
+                flash('Please change your username and email both are exists!')
+                return render_template('register.html')
         elif user:
             if user.email!=request.form['email']:
-                msg='Username already exists , please change your username!'
-                return render_template('popup.html',msg=msg)
+                flash('Username already exists , please change your username!')
+                return render_template('register.html')
         elif email:
             if email.username!=request.form['username']:
-                msg='Email already exists , please change your Email!'
-                return render_template('popup.html',msg=msg)
+                flash('Email already exists , please change your Email!')
+                return render_template('register.html')
         else:
             user=User(username=request.form['username'],email=request.form['email'],password=bcry.generate_password_hash(request.form['password']).decode('utf-8'))
             
@@ -121,9 +118,8 @@ def register():
             db.session.add(profile)
             db.session.commit()
             
-            msg=' registration successful'
+            flash(' registration successful')
             session['username']=user.username                                                                                               
-            render_template('popup.html',msg=msg)
             return redirect(url_for('home'))
     else:
         return render_template('register.html',msg=msg)
@@ -285,8 +281,8 @@ def delaccount():
     # render_template('popup.html',msg=msg)
     return redirect(url_for('index'))
 
-@app.route('/editlike/<int:id>/<int:n>/<ans>')
-def editlike(id,n,ans):
+@app.route('/editlike/<int:id>/<int:n>')
+def editlike(id,n):
     path=request.referrer
     user=User.query.filter_by(username=session['username']).first()
     blog=Blog.query.filter_by(id=id).first()
@@ -298,10 +294,7 @@ def editlike(id,n,ans):
         count=Like.query.filter_by(blog_id=id).count()
         blog.total_likes=count
         db.session.commit()
-        if ans=='no':
-            return redirect(url_for('viewblog',id=id))
-        else:
-            return redirect(url_for('blog'))
+        return redirect(path)
     else:
         
         like=Like(blog_id=id,user_id=user.id)
@@ -310,13 +303,25 @@ def editlike(id,n,ans):
         count=Like.query.filter_by(blog_id=id).count()
         blog.total_likes=count
         db.session.commit()
-        if ans=='no':
-            return redirect(url_for('viewblog',id=id))
-        else:
-            return redirect(url_for('blog'))
+        return redirect(path)
         
-@app.route('/editrate/<int:id>/<int:raty>/<ans>')
-def editrate(id,raty,ans):
+@app.route('/editcomment/<int:id>',methods=['GET','POST'])
+def editcomment(id):
+    path=request.referrer
+    blog=Blog.query.filter_by(id=id).first()
+
+    if request.method=='POST':
+        comm=request.form['text']
+        print(comm)
+        com=Comment(blog_id=id,user_id=blog.user_id,coment=comm)
+        db.session.add(com)
+        db.session.commit()
+        blog.total_comments=Comment.query.filter_by(blog_id=id).count()
+        db.session.commit()
+        return redirect(path)
+    return redirect(path)
+@app.route('/editrate/<int:id>/<int:raty>')
+def editrate(id,raty):
     path=request.referrer
     user=User.query.filter_by(username=session['username']).first()
     rate=Rate.query.filter_by(blog_id=id,user_id=user.id).first()
@@ -336,12 +341,11 @@ def editrate(id,raty,ans):
     for i in rates:
         l1.append(i.rate)
     count=sum(l1)/len(l1)
+    count=round(count,1)
     blog.rating=count
     db.session.commit()
-    if ans=='no':
-        return redirect(url_for('viewblog',id=id))
-    else:
-        return redirect(url_for('blog'))
+    return redirect(path)
+    
     
 
 

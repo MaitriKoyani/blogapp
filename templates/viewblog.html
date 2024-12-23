@@ -27,6 +27,22 @@
     .star.selected {
         color: gold; 
     }
+    .list {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+            
+    }
+    .list.show-comments{
+        display:block;
+    }
+        
+    .comicon {
+        cursor: pointer;
+        font-size: 24px;
+        color: #555;
+    }
 </style>
 {% endblock %}
 
@@ -61,7 +77,7 @@
           {% if username!='' %}
           {% set user_like = Like.query.filter_by(blog_id=b.id, user_id=uid).first() %}
           
-            <a href="/editlike/{{ b.id }}/{{ 0 if user_like else 1 }}/no" style="text-decoration: none;">
+            <a href="/editlike/{{ b.id }}/{{ 0 if user_like else 1 }}" style="text-decoration: none;">
                 <i class="fas fa-heart icon m-1" id="toggle-icon" style="font-size: 15px; color: {{ 'red' if user_like else 'white' }}; text-shadow: 0 0 2px {{ 'white' if user_like else 'black' }};">
                 </i>
             </a>        
@@ -71,11 +87,49 @@
             </i>
           {% endif %}
             {{ b.total_likes }}
+            <a style="text-decoration: none;" class="">
+              <i class="fas fa-comments icon m-1 comicon" data-id="{{b.id}}" style="color: white;"></i>
+            </a> 
+            {{b.total_comments}}
+            <div class="list"> 
+                {% set comments = b.comment %}
+                <ul style="list-style-type: none;">
+                    {% for com in comments %}
+                      <li>{{ com.coment }}</li>
+                    {% endfor %}
+                </ul>
+                {% if username %}
+          
+                <form class="d-inline-block" method="POST" action="{{ url_for('editcomment', id=b.id) }}">
+                    <input type="text" name="text" placeholder="Add your comment" required>
+                    <button class="d-inline-block" type="submit">
+                        <i class="fa-solid fa-paper-plane" ></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div> 
+          <script>
+            document.addEventListener("DOMContentLoaded", () => {
 
-          <a href="#" style="text-decoration: none;"><i class="fas fa-comments icon m-1" id="toggle-icon"></i></a> comets
+                const cards=document.querySelectorAll(".raty");
+                cards.forEach((raty)=>{
+                    const icon = raty.querySelector(".comicon");
+                    const comments = raty.querySelector(".list"); 
+                    
+                    icon.addEventListener("click", () => {
+                        console.log("Icon clicked, toggle display!", comments.style.display);
+                        if (comments.style.display === "none" || comments.style.display === "") {
+                            comments.style.display = "block"; 
+                        } else {
+                            comments.style.display = "none";
+                        }
+                    });
+                })
+            });
+        </script>
           {% if username!='' %}
           <a href="" style="text-decoration: none;" class="toggle-rating">
-            <div class="rounded d-inline-block colo" style="background-color: rgb(111, 118, 115); width: 50px; color: white;">
+            <div class="rounded d-inline-block " style="background-color: {{ 'green' if b.rating >= 4 else 'orange' if b.rating >= 3 else 'red' }}; width: 50px; color: white;">
               <i class="fas fa-star icon m-1" id="rate" ></i>{{b.rating}}
             </div>
           </a> 
@@ -94,35 +148,13 @@
           </div>
           {% else %}
 
-            <div class="rounded d-inline-block colo" style="background-color: rgb(111, 118, 115); width: 50px; color: white;">
+            <div class="rounded d-inline-block colo" style="background-color: {{ 'green' if b.rating >= 4 else 'orange' if b.rating >= 3 else 'red' }}; width: 50px; color: white;">
               <i class="fas fa-star icon m-1" id="rate" ></i>{{b.rating}}
             </div>
           </a>
           
           {% endif %}
-          <script>
-            document.addEventListener("DOMContentLoaded", () => {
-              const cards = document.querySelectorAll(".raty"); 
-              
-              const rate = parseFloat("{{b.rating}}"); 
           
-              cards.forEach((raty) => {
-                const color = raty.querySelector(".colo");  
-                
-                if (rate <= 1.9) {
-                  color.style.backgroundColor = 'red';
-                } else if (rate <= 2.9) {
-                  color.style.backgroundColor = 'orange';
-                } else if (rate <= 3.9) {
-                  color.style.backgroundColor = 'yellowgreen';
-                } else if (rate <= 5) {
-                  color.style.backgroundColor = 'green';
-                } else {
-                  color.style.backgroundColor = 'grey';
-                }
-              });
-            });
-          </script>
           <script>
             
             const icon = document.getElementById('toggle-icon');
@@ -161,7 +193,7 @@
                             output.innerText = `Rating is: ${rating}/5`;
                             
                             const rateLink = grp.querySelector(".rate-link");
-                            const url = `/editrate/${blogId}/${rating}/no`;
+                            const url = `/editrate/${blogId}/${rating}`;
                             if (url && typeof url === "string") {
                                 rateLink.href = url;
                             } else {
