@@ -38,22 +38,48 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <div class="top-50 start-50 position-absolute translate-middle h-50 ">
-        <div class="card" style="width: 18rem;">
-            <img src="{{b.img}}" class="card-img-top " alt="...">
-            <div class="card-body">
-              <h5 class="card-title">{{b.title}}</h5>
-              <p class="card-text">{{b.description}}</p>
-              <a href="#"><i class="fas fa-heart icon m-2" id="toggle-icon"></i> </a>{{b.likes}} likes
-              <script>
-                const iconElement = document.getElementById('toggle-icon');
+      <div class="card text-light " style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
+        <img src="{{b.img}}" class="card-img-top m-2 px-0 rounded" alt="img" style="width: 500px; height: 370px; ">
+        <div class="card-body">
+            {% set pr=pr.query.filter_by(user_id=b.user_id).first() %}
+            
+          <h5 class="fs-5"><img src="{{pr.pic}}" alt="" width="30" height="24" class="avtar me-1 " style="width: 35px; height: 35px; border: 1px solid white;">{{pr.profile_id}}</h5>
+          <h5 class="card-title">{{b.title}}</h5>
+          <p class="card-text">{{b.description}}</p>
+          {% if username!='' %}
+          {% set user_like = Like.query.filter_by(blog_id=b.id, user_id=uid).first() %}
+          
+            <a href="/editlike/{{ b.id }}/{{ 0 if user_like else 1 }}/no" style="text-decoration: none;">
+                <i class="fas fa-heart icon m-1" id="toggle-icon" style="font-size: 15px; color: {{ 'red' if user_like else 'white' }}; text-shadow: 0 0 2px {{ 'white' if user_like else 'black' }};">
+                </i>
+            </a>        
+          {% else %}
+          
+            <i class="fas fa-heart icon m-1" id="toggle-icon" style="font-size: 15px; color: red; text-shadow: 0 0 2px black;">
+            </i>
+          {% endif %}
+            {{ Like.query.filter_by(blog_id=b.id).count() }}
 
-                iconElement.addEventListener('click', () => {
-                  iconElement.classList.toggle('red-outline');
-                });
-              </script>
-              
-            </div>
-          </div>
+          <a href="#" style="text-decoration: none;"><i class="fas fa-comments icon m-1" id="toggle-icon"></i></a> comets
+          <a href="#" style="text-decoration: none;"><i class="fas fa-star icon m-1" id="toggle-icon"></i></a> rate
+          <script>
+           
+            const icon = document.getElementById('toggle-icon');
+    
+            
+            icon.addEventListener('click', () => {
+                
+                if (icon.style.backgroundColor === 'white') {
+                    icon.style.backgroundColor = 'red';
+                    
+                } else {
+                    icon.style.backgroundColor = 'white';
+                    icon.style.color = 'white';
+                }
+            });
+        </script>
+        </div>
+      </div>
     </div>
 
 {% endblock %}

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <style>
         .avtar {
@@ -12,6 +13,21 @@
             height: 50px;
             border-radius: 50%;
         }
+        .star {
+            font-size: 30px;
+            cursor: pointer;
+            color: white;
+        }
+        .one, .two , .three, .four, .five{
+            color: cadetblue;
+        }
+        .d-none{
+            display:none;
+        }
+        .star.selected {
+            color: gold; 
+        }
+
     </style>
 </head>
 <body style="background-image: url(https://img.freepik.com/free-vector/hand-painted-pastel-coloured-watercolour-background-design_1048-19610.jpg?semt=ais_hybrid); background-repeat: no-repeat; background-size: cover;">
@@ -22,33 +38,114 @@
                 {{username}}
             </a>
             
-            <div class="d-flex pe-5">
+            <div class="d-flex pe-4">
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary ms-2 text-dark fs-5">Logout</a>
             </div>  
         </div>
     </nav>
-    <div class="text-center m-3" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 40px; color: rgba(50, 18, 50, 0.929); ">My Blogs</div>
+    <div class="text-center m-3" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 40px; color: rgba(50, 18, 50, 0.929); ">My Blogs <a href="{{url_for('addblog')}}" class="btn btn-outline-secondary me-5 position-absolute end-0 ">+ Add blogs</a></div>
     
-    <div class="container">
+
+    <div class="container-fluid d-flex flex-column justify-content-center align-items-center">
         {% if coun>0 %}
-        <div class="position-absolute top-50 end-0 fs-3"><a href="{{url_for('addblog')}}" class="btn btn-outline-secondary me-5">+ Add blogs</a></div>
-        <div class="row">
+        <div class="row ">
             {% for b in blog %}
-            <div class="d-inline-block border border-2  m-2 rounded fw-bold" style="background-image: url({{b.img}});height: 400px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);">
+            <!-- <div class="d-inline-block border border-2  m-2 rounded fw-bold" style="background-image: url({{b.img}});height: 400px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);"> -->
                 
-                <h5 class="">{{b.title}}</h5>
-                <p class="">{{b.description}}</p>
-                <a>🤍{{b.likes}} likes</a><br>
-                <a href="/delblog/{{b.id}}" >🧹 delete</a>
-                <a href="/editblog/{{b.id}}">🖊️ edit</a>       
-            </div>
+                <div class="card text-light m-5" style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
+                    <img src="{{b.img}}" class="card-img-top my-2 px-0 rounded" alt="img" style="width: 500px; height: 370px; ">
+                    <div class="card-body">
+                        {% set pr=pr.query.filter_by(user_id=b.user_id).first() %}
+                        
+                      <h5 class="fs-5"><img src="{{pr.pic}}" alt="" width="30" height="24" class="avtar me-1 " style="width: 35px; height: 35px; border: 1px solid white;">{{pr.profile_id}}</h5>
+                      <h5 class="card-title">{{b.title}}</h5>
+                      <p class="card-text">{{b.description}}</p>
+                      {% set user_like = Like.query.filter_by(blog_id=b.id, user_id=uid).first() %}
+                        <a href="/editlike/{{ b.id }}/{{ 0 if user_like else 1 }}/yes" style="text-decoration: none;">
+                            <i class="fas fa-heart icon m-1" id="toggle-icon" style="font-size: 15px; color: {{ 'red' if user_like else 'white' }}; text-shadow: 0 0 2px {{ 'white' if user_like else 'black' }};">
+                            </i>
+                        </a>        
+                        {{ Like.query.filter_by(blog_id=b.id).count() }}
+
+                      <a href="#" style="text-decoration: none;"><i class="fas fa-comments icon m-1" id="come" style="color: white;"></i></a> comets
+                      <a href="#" style="text-decoration: none;" data-id="{{b.id}}" class="toggle-rating"><i class="fas fa-star icon m-1" id="rate" style="color: white;"></i></a> rate
+
+                      <div class="grp d-none" data-id="{{b.id}}">
+                        <div class="stars">
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                            <span class="star">★</span>
+                        </div>
+                        <p class="out">rate</p>
+                      </div>
+                      
+                      
+                      <script>
+                       
+                        const icon = document.getElementById('toggle-icon');
+                        icon.addEventListener('click', () => {
+                            
+                            if (icon.style.backgroundColor === 'white') {
+                                icon.style.backgroundColor = 'red';
+                                
+                            } else {
+                                icon.style.backgroundColor = 'white';
+                                icon.style.color = 'white';
+                            }
+                        });
+                        
+                        document.addEventListener("DOMContentLoaded", () => {
+                            const cards = document.querySelectorAll(".card");
+
+                            cards.forEach((card) => {
+                                const rateIcon = card.querySelector(".toggle-rating");
+                                const grp = card.querySelector(".grp");
+                                const stars = grp.querySelectorAll(".star");
+                                const output = grp.querySelector(".out");
+
+                                // Toggle visibility of the rating stars
+                                rateIcon.addEventListener("click", (e) => {
+                                    e.preventDefault(); // Prevent default anchor behavior
+                                    grp.classList.toggle("d-none"); // Show or hide the stars
+                                });
+
+                                // Handle star rating functionality
+                                stars.forEach((star, index) => {
+                                    star.addEventListener("click", () => {
+                                        const rating = index + 1;
+                                        updateRating(stars, rating);
+                                        output.innerText = `Rating is: ${rating}/5`;
+                                    });
+                                });
+
+                                function updateRating(stars, rating) {
+                                    // Reset all stars
+                                    stars.forEach((star) => (star.className = "star"));
+
+                                    // Highlight stars up to the selected rating
+                                    for (let i = 0; i < rating; i++) {
+                                        stars[i].className = "star selected"; // Add a 'selected' class
+                                    }
+                                }
+                            });
+                        });
+                      </script>
+                      <br>
+                      <br>
+                      <a href="/delblog/{{b.id}}" class="btn" style="background-color: rgb(155, 84, 84);"> delete</a>
+                      <a href="/editblog/{{b.id}}"class="btn" style="background-color: rgb(144, 179, 193);"> edit</a> 
+                    </div>
+                  </div>
+            <!-- </div> -->
             {% endfor %}
         </div>
         {% else %}
             
             <br>
             <br>
-            <div class="fs-4 text-light text-center">There are no blogs! so, if you are interested then  -> <a href="/addblog" class="btn btn-outline-secondary">Create blog</a></div>
+            <div class="fs-4 text-dark text-center">There are no blogs! so, if you are interested then  -> <a href="/addblog" class="btn btn-outline-secondary fs-5">Create blog</a></div>
         
         {% endif %}
     </div>

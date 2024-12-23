@@ -3,22 +3,26 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import login_manager,LoginManager
 import random
+from flask_migrate import Migrate
 
 app=Flask(__name__)
 app= Flask(__name__)
 bcry= Bcrypt(app)
-app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Timeline.db"
+app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Blogapp.db"
 app.config["SECRET_KEY"] = "end is beginning"
 db=SQLAlchemy(app)
-
+migrate = Migrate(app, db)
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(60), unique=True)
     email = db.Column(db.String, unique=True)
     password = db.Column(db.String(255), nullable=False)
-    blogs = db.relationship('Blog', backref='user', lazy=True)
-    profile = db.relationship('Profile', backref='user', lazy=True)
+    blogs = db.relationship('Blog', backref='user', lazy=True, cascade='all, delete-orphan')
+    profile = db.relationship('Profile', backref='user', lazy=True, cascade='all, delete-orphan')
+    likes = db.relationship('Like', backref='user', lazy=True, cascade='all, delete-orphan')
+    comment = db.relationship('Comment', backref='user', lazy=True, cascade='all, delete-orphan')
+    rate=db.relationship('Rate', backref='user', lazy=True, cascade='all, delete-orphan')
 
 class Blog(db.Model):
     __tablename__ = 'blog'
@@ -26,8 +30,34 @@ class Blog(db.Model):
     title = db.Column(db.String(60))
     img = db.Column(db.String)
     description = db.Column(db.String)
-    likes=db.Column(db.Integer)
+    total_likes=db.Column(db.Integer,default=0)
+    total_comments=db.Column(db.Integer,default=0)
+    rating=db.Column(db.Float,default=0)
     user_id=db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    likes = db.relationship('Like', backref='blog', lazy=True, cascade='all, delete-orphan')
+    comment = db.relationship('Comment', backref='blog', lazy=True, cascade='all, delete-orphan')
+    rate=db.relationship('Rate', backref='blog', lazy=True, cascade='all, delete-orphan')
+
+class Like(db.Model):
+    __tablename__ = 'like'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False, index=True)
+
+class Comment(db.Model):
+    __tablename__ = 'comment'
+    id = db.Column(db.Integer, primary_key=True)
+    coment=db.Column(db.String,nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False, index=True)
+
+class Rate(db.Model):
+    __tablename__ = 'rate'
+    id = db.Column(db.Integer, primary_key=True)
+    rate=db.Column(db.Integer,nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'), nullable=False, index=True)
+
 
 class Profile(db.Model):
     __tablename__ = 'profile'
@@ -131,10 +161,11 @@ def logout():
 @app.route('/home')
 def home(): 
     blog=Blog.query.all()
+    like=Like
     if 'username' in session:
         user=User.query.filter_by(username=session['username']).first()
         p=Profile.query.filter_by(user_id=user.id).first()
-        print(p,user.id)
+        
         bl=[]
         for b in blog:
             if b.user_id!=user.id:
@@ -144,11 +175,10 @@ def home():
         except Exception as e:
             pic='https://i.pinimg.com/originals/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg'
         
-        return render_template('home.html',blog=bl,username=user.username,pic=pic)
+        return render_template('home.html',blog=bl,username=user.username,pic=pic,Like=like)
     else:
        
-        return render_template('home.html',blog=blog,username='')
-
+        return render_template('home.html',blog=blog,username='',Like=like)
 
 
 
@@ -179,26 +209,25 @@ def blog():
     user=User.query.filter_by(username=session['username']).first()
     blog=Blog.query.filter_by(user_id=user.id).all()
     p=Profile.query.filter_by(user_id=user.id).first()
+    like=Like
+    pr=Profile
+    
     try: 
-        
         coun=len(blog)
-        
     except TypeError:
         coun=0
-    
     pic=p.pic
-    
-        
-    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic)
+    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr)
 
 @app.route('/addblog',methods=['POST','GET'])
 def addblog():
     if request.method == 'POST':
         user=User.query.filter_by(username=session['username']).first()
+        blog=Blog(title=request.form['titl'],img=request.form['img'],description=request.form['description'],user_id=user.id)
         
-        blog=Blog(title=request.form['titl'],img=request.form['img'],description=request.form['description'],likes=0,user_id=user.id)
         db.session.add(blog)
         db.session.commit()
+        like=Like(blog_id=blog.id)
         return redirect(url_for('blog'))
     return render_template('addblog.html',b='',title='')
 
@@ -225,10 +254,18 @@ def delblog(id):
 @app.route('/viewblog/<int:id>')
 def viewblog(id):
     blog=Blog.query.filter_by(id=id).first()
-    user=User.query.filter_by(username=session['username']).first()
-    pic=Profile.query.filter_by(user_id=user.id).first()
-    
-    return render_template('viewblog.html',b=blog,pc=pic.pic,username=user.username)
+    pic=Profile.query.filter_by(user_id=blog.user_id).first()
+    like=Like
+    pr=Profile
+    if 'username' in session:
+        user=User.query.filter_by(username=session['username']).first()
+        uid=user.id
+        user=user.username
+    else:
+        user=''
+        uid=0
+    return render_template('viewblog.html',b=blog,pc=pic.pic,username=user,uid=uid,Like=like,pr=pr)
+
 @app.route('/delaccount')
 def delaccount():
     
@@ -248,6 +285,50 @@ def delaccount():
     # render_template('popup.html',msg=msg)
     return redirect(url_for('index'))
 
+@app.route('/editlike/<int:id>/<int:n>/<ans>')
+def editlike(id,n,ans):
+    path=request.referrer
+    if n==0:
+        user=User.query.filter_by(username=session['username']).first()
+        like=Like.query.filter_by(blog_id=id,user_id=user.id).first()
+        db.session.delete(like)
+        db.session.commit()
+        if ans=='no':
+            return redirect(url_for('viewblog',id=id))
+        else:
+            return redirect(url_for('blog'))
+    else:
+        user=User.query.filter_by(username=session['username']).first()
+        like=Like(blog_id=id,user_id=user.id)
+        db.session.add(like)
+        db.session.commit()
+        if ans=='no':
+            return redirect(url_for('viewblog',id=id))
+        else:
+            return redirect(url_for('blog'))
+        
+@app.route('/editrate/<int:id>/<int:n>/<ans>')
+def editrate(id,n,ans):
+    path=request.referrer
+    if n==0:
+        user=User.query.filter_by(username=session['username']).first()
+        like=Like.query.filter_by(blog_id=id,user_id=user.id).first()
+        db.session.delete(like)
+        db.session.commit()
+        if ans=='no':
+            return redirect(url_for('viewblog',id=id))
+        else:
+            return redirect(url_for('blog'))
+    else:
+        user=User.query.filter_by(username=session['username']).first()
+        like=Like(blog_id=id,user_id=user.id)
+        db.session.add(like)
+        db.session.commit()
+        if ans=='no':
+            return redirect(url_for('viewblog',id=id))
+        else:
+            return redirect(url_for('blog'))
+    
 
 
 if __name__ == '__main__':
