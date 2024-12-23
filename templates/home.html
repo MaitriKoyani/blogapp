@@ -73,7 +73,7 @@
                 
                 <h5>{{b.title}}</h5>
                 
-                <a>❤️{{ Like.query.filter_by(blog_id=b.id).count() }} </a>
+                <a>❤️{{ b.total_likes }} </a>
                 
                 <div class="text-end mt-3"><a href="/viewblog/{{b.id}}" class="fw-bold text-light text-end " style="text-decoration: none;">view >></a></div>      
             </div>

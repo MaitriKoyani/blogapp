@@ -217,7 +217,7 @@ def blog():
     except TypeError:
         coun=0
     pic=p.pic
-    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr)
+    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr,)
 
 @app.route('/addblog',methods=['POST','GET'])
 def addblog():
@@ -288,46 +288,60 @@ def delaccount():
 @app.route('/editlike/<int:id>/<int:n>/<ans>')
 def editlike(id,n,ans):
     path=request.referrer
+    user=User.query.filter_by(username=session['username']).first()
+    blog=Blog.query.filter_by(id=id).first()
     if n==0:
-        user=User.query.filter_by(username=session['username']).first()
+
         like=Like.query.filter_by(blog_id=id,user_id=user.id).first()
         db.session.delete(like)
+        db.session.commit()
+        count=Like.query.filter_by(blog_id=id).count()
+        blog.total_likes=count
         db.session.commit()
         if ans=='no':
             return redirect(url_for('viewblog',id=id))
         else:
             return redirect(url_for('blog'))
     else:
-        user=User.query.filter_by(username=session['username']).first()
+        
         like=Like(blog_id=id,user_id=user.id)
         db.session.add(like)
+        db.session.commit()
+        count=Like.query.filter_by(blog_id=id).count()
+        blog.total_likes=count
         db.session.commit()
         if ans=='no':
             return redirect(url_for('viewblog',id=id))
         else:
             return redirect(url_for('blog'))
         
-@app.route('/editrate/<int:id>/<int:n>/<ans>')
-def editrate(id,n,ans):
+@app.route('/editrate/<int:id>/<int:raty>/<ans>')
+def editrate(id,raty,ans):
     path=request.referrer
-    if n==0:
-        user=User.query.filter_by(username=session['username']).first()
-        like=Like.query.filter_by(blog_id=id,user_id=user.id).first()
-        db.session.delete(like)
+    user=User.query.filter_by(username=session['username']).first()
+    rate=Rate.query.filter_by(blog_id=id,user_id=user.id).first()
+    blog=Blog.query.filter_by(id=id).first()
+    if rate!=None:
+        
+        rate.rate=raty
         db.session.commit()
-        if ans=='no':
-            return redirect(url_for('viewblog',id=id))
-        else:
-            return redirect(url_for('blog'))
     else:
-        user=User.query.filter_by(username=session['username']).first()
-        like=Like(blog_id=id,user_id=user.id)
-        db.session.add(like)
+        
+        rate=Rate(blog_id=id,user_id=user.id,rate=raty)
+        db.session.add(rate)
         db.session.commit()
-        if ans=='no':
-            return redirect(url_for('viewblog',id=id))
-        else:
-            return redirect(url_for('blog'))
+    rates=Rate.query.filter_by(blog_id=id).all()
+    
+    l1=[]
+    for i in rates:
+        l1.append(i.rate)
+    count=sum(l1)/len(l1)
+    blog.rating=count
+    db.session.commit()
+    if ans=='no':
+        return redirect(url_for('viewblog',id=id))
+    else:
+        return redirect(url_for('blog'))
     
 
 

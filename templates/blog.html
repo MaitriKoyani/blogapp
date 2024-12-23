@@ -18,16 +18,13 @@
             cursor: pointer;
             color: white;
         }
-        .one, .two , .three, .four, .five{
-            color: cadetblue;
-        }
         .d-none{
             display:none;
         }
         .star.selected {
             color: gold; 
         }
-
+        
     </style>
 </head>
 <body style="background-image: url(https://img.freepik.com/free-vector/hand-painted-pastel-coloured-watercolour-background-design_1048-19610.jpg?semt=ais_hybrid); background-repeat: no-repeat; background-size: cover;">
@@ -52,7 +49,7 @@
             {% for b in blog %}
             <!-- <div class="d-inline-block border border-2  m-2 rounded fw-bold" style="background-image: url({{b.img}});height: 400px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);"> -->
                 
-                <div class="card text-light m-5" style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
+                <div class="card text-light m-5 raty" data-id="{{b.id}}" style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
                     <img src="{{b.img}}" class="card-img-top my-2 px-0 rounded" alt="img" style="width: 500px; height: 370px; ">
                     <div class="card-body">
                         {% set pr=pr.query.filter_by(user_id=b.user_id).first() %}
@@ -65,23 +62,51 @@
                             <i class="fas fa-heart icon m-1" id="toggle-icon" style="font-size: 15px; color: {{ 'red' if user_like else 'white' }}; text-shadow: 0 0 2px {{ 'white' if user_like else 'black' }};">
                             </i>
                         </a>        
-                        {{ Like.query.filter_by(blog_id=b.id).count() }}
+                        {{ b.total_likes }}
 
                       <a href="#" style="text-decoration: none;"><i class="fas fa-comments icon m-1" id="come" style="color: white;"></i></a> comets
-                      <a href="#" style="text-decoration: none;" data-id="{{b.id}}" class="toggle-rating"><i class="fas fa-star icon m-1" id="rate" style="color: white;"></i></a> rate
-
-                      <div class="grp d-none" data-id="{{b.id}}">
-                        <div class="stars">
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
-                            <span class="star">★</span>
+                      
+                      <a href="" style="text-decoration: none;" class="toggle-rating">
+                        <div class="rounded d-inline-block colo" style="background-color: rgb(111, 118, 115); width: 50px; color: white;">
+                          <i class="fas fa-star icon m-1" id="rate" ></i>{{b.rating}}
                         </div>
-                        <p class="out">rate</p>
-                      </div>
-                      
-                      
+                      </a> 
+    
+                          <div class="grp d-none ms-3" data-id="{{b.id}}">
+                            <div class="stars">
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                                <span class="star">★</span>
+                            </div>
+                            <p class="out">Rate-</p>
+                            <a href="#"  data-id="{{b.id}}" class="btn btn-sm rate-link" style="background-color: rgb(155, 209, 191);">Submit</a>
+                          </div>
+                          <script>
+                            document.addEventListener("DOMContentLoaded", () => {
+                              const cards = document.querySelectorAll(".raty"); 
+                              
+                              const rate = parseFloat("{{b.rating}}"); 
+                          
+                              cards.forEach((raty) => {
+                                const color = raty.querySelector(".colo");  
+                                
+                                if (rate <= 1.9) {
+                                  color.style.backgroundColor = 'red';
+                                } else if (rate <= 2.9) {
+                                  color.style.backgroundColor = 'orange';
+                                } else if (rate <= 3.9) {
+                                  color.style.backgroundColor = 'yellowgreen';
+                                } else if (rate <= 5) {
+                                  color.style.backgroundColor = 'green';
+                                } else {
+                                  color.style.backgroundColor = 'grey';
+                                }
+                              });
+                            });
+                          </script>
+                                            
                       <script>
                        
                         const icon = document.getElementById('toggle-icon');
@@ -97,36 +122,49 @@
                         });
                         
                         document.addEventListener("DOMContentLoaded", () => {
-                            const cards = document.querySelectorAll(".card");
+                            const cards = document.querySelectorAll(".raty");
 
-                            cards.forEach((card) => {
-                                const rateIcon = card.querySelector(".toggle-rating");
-                                const grp = card.querySelector(".grp");
+                            cards.forEach((raty) => {
+                                const rateIcon = raty.querySelector(".toggle-rating");
+                                const grp = raty.querySelector(".grp");
                                 const stars = grp.querySelectorAll(".star");
                                 const output = grp.querySelector(".out");
-
-                                // Toggle visibility of the rating stars
+                                
+                                const blogId = raty.dataset.id;
+                                
                                 rateIcon.addEventListener("click", (e) => {
-                                    e.preventDefault(); // Prevent default anchor behavior
-                                    grp.classList.toggle("d-none"); // Show or hide the stars
+                                    e.preventDefault(); 
+                                    grp.classList.toggle("d-none"); 
                                 });
 
-                                // Handle star rating functionality
+                                
                                 stars.forEach((star, index) => {
                                     star.addEventListener("click", () => {
                                         const rating = index + 1;
                                         updateRating(stars, rating);
                                         output.innerText = `Rating is: ${rating}/5`;
+                                        
+                                        const rateLink = grp.querySelector(".rate-link");
+                                        const url = `/editrate/${blogId}/${rating}/yes`;
+                                        if (url && typeof url === "string") {
+                                            rateLink.href = url;
+                                        } else {
+                                            console.error("URL is not properly set:", url);
+                                        }
+                                        const fill = document.querySelector('.star .filled');
+
+                                        const fillPercentage = (rating / 5) * 100; 
+                                        fill.style.width = fillPercentage + '%'; 
+                                                                                   
                                     });
                                 });
 
                                 function updateRating(stars, rating) {
-                                    // Reset all stars
+                                    
                                     stars.forEach((star) => (star.className = "star"));
 
-                                    // Highlight stars up to the selected rating
                                     for (let i = 0; i < rating; i++) {
-                                        stars[i].className = "star selected"; // Add a 'selected' class
+                                        stars[i].className = "star selected"; 
                                     }
                                 }
                             });

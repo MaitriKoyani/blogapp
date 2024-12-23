@@ -4,7 +4,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 <style>
     .icon {
-      font-size: 15px;
+      font-size: 13px;
       color: white; 
       text-shadow: 0 0 2px black; 
       cursor: pointer;
@@ -14,6 +14,18 @@
     .red-outline {
       color: red;
       text-shadow: 0 0 2px black;
+    }
+    .star {
+        font-size: 30px;
+        cursor: pointer;
+        color: white;
+    }
+        
+    .d-none{
+        display:none;
+    }
+    .star.selected {
+        color: gold; 
     }
 </style>
 {% endblock %}
@@ -38,7 +50,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <div class="top-50 start-50 position-absolute translate-middle h-50 ">
-      <div class="card text-light " style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
+      <div class="card text-light raty" data-id="{{b.id}}" style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
         <img src="{{b.img}}" class="card-img-top m-2 px-0 rounded" alt="img" style="width: 500px; height: 370px; ">
         <div class="card-body">
             {% set pr=pr.query.filter_by(user_id=b.user_id).first() %}
@@ -55,18 +67,65 @@
             </a>        
           {% else %}
           
-            <i class="fas fa-heart icon m-1" id="toggle-icon" style="font-size: 15px; color: red; text-shadow: 0 0 2px black;">
+            <i class="fas fa-heart  m-1" style="font-size: 15px; color: red; text-shadow: 0 0 2px black;">
             </i>
           {% endif %}
-            {{ Like.query.filter_by(blog_id=b.id).count() }}
+            {{ b.total_likes }}
 
           <a href="#" style="text-decoration: none;"><i class="fas fa-comments icon m-1" id="toggle-icon"></i></a> comets
-          <a href="#" style="text-decoration: none;"><i class="fas fa-star icon m-1" id="toggle-icon"></i></a> rate
+          {% if username!='' %}
+          <a href="" style="text-decoration: none;" class="toggle-rating">
+            <div class="rounded d-inline-block colo" style="background-color: rgb(111, 118, 115); width: 50px; color: white;">
+              <i class="fas fa-star icon m-1" id="rate" ></i>{{b.rating}}
+            </div>
+          </a> 
+          
+
+          <div class="grp d-none ms-3" data-id="{{b.id}}">
+            <div class="stars">
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+            </div>
+            <p class="out">Rate-</p>
+            <a href="#"  data-id="{{b.id}}" class="btn btn-sm rate-link" style="background-color: rgb(155, 209, 191);">Submit</a>
+          </div>
+          {% else %}
+
+            <div class="rounded d-inline-block colo" style="background-color: rgb(111, 118, 115); width: 50px; color: white;">
+              <i class="fas fa-star icon m-1" id="rate" ></i>{{b.rating}}
+            </div>
+          </a>
+          
+          {% endif %}
           <script>
-           
-            const icon = document.getElementById('toggle-icon');
-    
+            document.addEventListener("DOMContentLoaded", () => {
+              const cards = document.querySelectorAll(".raty"); 
+              
+              const rate = parseFloat("{{b.rating}}"); 
+          
+              cards.forEach((raty) => {
+                const color = raty.querySelector(".colo");  
+                
+                if (rate <= 1.9) {
+                  color.style.backgroundColor = 'red';
+                } else if (rate <= 2.9) {
+                  color.style.backgroundColor = 'orange';
+                } else if (rate <= 3.9) {
+                  color.style.backgroundColor = 'yellowgreen';
+                } else if (rate <= 5) {
+                  color.style.backgroundColor = 'green';
+                } else {
+                  color.style.backgroundColor = 'grey';
+                }
+              });
+            });
+          </script>
+          <script>
             
+            const icon = document.getElementById('toggle-icon');
             icon.addEventListener('click', () => {
                 
                 if (icon.style.backgroundColor === 'white') {
@@ -77,7 +136,52 @@
                     icon.style.color = 'white';
                 }
             });
-        </script>
+            
+            document.addEventListener("DOMContentLoaded", () => {
+                const cards = document.querySelectorAll(".raty");
+
+                cards.forEach((raty) => {
+                    const rateIcon = raty.querySelector(".toggle-rating");
+                    const grp = raty.querySelector(".grp");
+                    const stars = grp.querySelectorAll(".star");
+                    const output = grp.querySelector(".out");
+                    
+                    const blogId = raty.dataset.id;
+                    
+                    rateIcon.addEventListener("click", (e) => {
+                        e.preventDefault(); 
+                        grp.classList.toggle("d-none"); 
+                    });
+
+                    
+                    stars.forEach((star, index) => {
+                        star.addEventListener("click", () => {
+                            const rating = index + 1;
+                            updateRating(stars, rating);
+                            output.innerText = `Rating is: ${rating}/5`;
+                            
+                            const rateLink = grp.querySelector(".rate-link");
+                            const url = `/editrate/${blogId}/${rating}/no`;
+                            if (url && typeof url === "string") {
+                                rateLink.href = url;
+                            } else {
+                                console.error("URL is not properly set:", url);
+                            }
+                                                                      
+                        });
+                    });
+
+                    function updateRating(stars, rating) {
+                        
+                        stars.forEach((star) => (star.className = "star"));
+
+                        for (let i = 0; i < rating; i++) {
+                            stars[i].className = "star selected"; 
+                        }
+                    }
+                });
+            });
+          </script>
         </div>
       </div>
     </div>
