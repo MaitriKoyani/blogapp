@@ -4,12 +4,27 @@ from flask_bcrypt import Bcrypt
 from flask_login import login_manager,LoginManager
 import random
 from flask_migrate import Migrate
+from flask_mail import Mail,Message
+import os
+from dotenv import load_dotenv
 
 app=Flask(__name__)
-app= Flask(__name__)
 bcry= Bcrypt(app)
+mail=Mail(app)
+load_dotenv()
+
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Blogapp.db"
 app.config["SECRET_KEY"] = "end is beginning"
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'program4192@gmail.com'
+app.config['MAIL_PASSWORD'] = os.getenv('my_key')
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
+
+
+
 db=SQLAlchemy(app)
 migrate = Migrate(app, db)
 class User(db.Model):
@@ -73,6 +88,16 @@ with app.app_context():
 
 @app.route('/')
 def index():
+    import smtplib
+
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)  # Use SSL
+        server.login('program4192@gmail.com', os.getenv('my_key'))  # Replace with your actual app password
+        print("Connected successfully to the SMTP server.")
+        server.quit()
+    except Exception as e:
+        print("Failed to connect to the SMTP server:")
+        
     if 'username' in session:
         return redirect(url_for('home'))
     else:
@@ -146,6 +171,39 @@ def login():
     else:
         return render_template('login.html',msg=msg)
 
+dict={}
+
+@app.route("/forgot",methods=['POST','GET'])
+def forgot():
+    if request.method=='POST':
+            emai=request.form['email']
+            
+            msg=Message('Hello',sender='program4192@gmail.com',recipients=[emai])
+            otp=random.randrange(100000,999999,6)
+            dict[emai]=otp
+            msg.body="hello!, i send you otp for reset password"+str(otp)
+            mail.send(msg)
+            return render_template('otp.html')
+        
+    return render_template('forgot.html')
+@app.route("/check",methods=['POST','GET'])
+def check():
+    if request.method=='POST':
+        if request.form['otp']==str(dict[request.form['email']]):
+            return render_template('reset.html')
+    return render_template('otp.html')
+@app.route("/reset",methods=['POST','GET'])
+def reset():
+    if request.method=='POST':
+        if request.form['newpass']==request.form['conpass']:
+            user=User.query.filter_by(email=dict.keys()).first()
+            user.password=bcry.generate_password_hash(request.form['newpass']).decode('utf-8')
+            db.session.commit()
+            return redirect(url_for('login'))
+        else:
+            return render_template('reset.html',msg='Password doesn\'t match')
+    return render_template('reset.html')
+
 @app.route("/logout")
 def logout():
     session.pop('username', None)
@@ -207,13 +265,13 @@ def blog():
     p=Profile.query.filter_by(user_id=user.id).first()
     like=Like
     pr=Profile
-    
+    rate=Rate
     try: 
         coun=len(blog)
     except TypeError:
         coun=0
     pic=p.pic
-    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr,)
+    return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr,Rate=rate)
 
 @app.route('/addblog',methods=['POST','GET'])
 def addblog():
@@ -250,17 +308,21 @@ def delblog(id):
 @app.route('/viewblog/<int:id>')
 def viewblog(id):
     blog=Blog.query.filter_by(id=id).first()
-    pic=Profile.query.filter_by(user_id=blog.user_id).first()
     like=Like
     pr=Profile
+    print(pr)
+    
+    count=Rate.query.filter_by(blog_id=id).count()
     if 'username' in session:
         user=User.query.filter_by(username=session['username']).first()
+        pic=Profile.query.filter_by(user_id=user.id).first()
+
         uid=user.id
         user=user.username
     else:
         user=''
         uid=0
-    return render_template('viewblog.html',b=blog,pc=pic.pic,username=user,uid=uid,Like=like,pr=pr)
+    return render_template('viewblog.html',b=blog,pc=pic.pic,username=user,uid=uid,Like=like,pr=pr,count=count)
 
 @app.route('/delaccount')
 def delaccount():
@@ -309,17 +371,28 @@ def editlike(id,n):
 def editcomment(id):
     path=request.referrer
     blog=Blog.query.filter_by(id=id).first()
+    user=User.query.filter_by(username=session['username']).first()
 
     if request.method=='POST':
         comm=request.form['text']
         print(comm)
-        com=Comment(blog_id=id,user_id=blog.user_id,coment=comm)
+        com=Comment(blog_id=id,user_id=user.id,coment=comm)
         db.session.add(com)
         db.session.commit()
         blog.total_comments=Comment.query.filter_by(blog_id=id).count()
         db.session.commit()
         return redirect(path)
     return redirect(path)
+@app.route('/delcom/<int:id>/<int:bid>')
+def delcom(id,bid):
+    com=Comment.query.filter_by(id=id).first()
+    db.session.delete(com)
+    db.session.commit()
+    blog=Blog.query.filter_by(id=bid).first()
+    blog.total_comments=Comment.query.filter_by(blog_id=bid).count()
+    
+    db.session.commit()
+    return redirect(request.referrer)
 @app.route('/editrate/<int:id>/<int:raty>')
 def editrate(id,raty):
     path=request.referrer
