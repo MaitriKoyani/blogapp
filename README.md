@@ -4,3 +4,4 @@
 <h3>It also provide like , comment and rating functionalities</h3>
 <br>
 <h4>If you wanna this code just download this file and create virtual environment and then pip this requirement.txt file which install all libraries which need to run this code flexible and manageable.</h4>
+<h4>(There are use of .env file so it's for email password store secure.)</h4>
