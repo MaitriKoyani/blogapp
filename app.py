@@ -6,6 +6,7 @@ import random
 from flask_migrate import Migrate
 from flask_mail import Mail,Message
 import os
+import shutil
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
@@ -105,22 +106,22 @@ def register():
         if user and email:
             if user.username==email.username:
                 if bcry.check_password_hash (user.password, request.form['password']):
-                    flash('User is already registered!')
+                    # msg='User is already registered!'
                     return redirect(url_for('home'))
                 else:
-                    flash('Password is wrong but user exists so please login!')
-                    return render_template('register.html')
+                    msg=('Password is wrong but user exists so please login!')
+                    return render_template('register.html',msg=msg)
             else:
-                flash('Please change your username and email both are exists!')
-                return render_template('register.html')
+                msg=('Please change your username and email both are exists!')
+                return render_template('register.html',msg=msg)
         elif user:
             if user.email!=request.form['email']:
-                flash('Username already exists , please change your username!')
-                return render_template('register.html')
+                msg=('Username already exists , please change your username!')
+                return render_template('register.html',msg=msg)
         elif email:
             if email.username!=request.form['username']:
-                flash('Email already exists , please change your Email!')
-                return render_template('register.html')
+                msg=('Email already exists , please change your Email!')
+                return render_template('register.html',msg=msg)
         else:
             user=User(username=request.form['username'],email=request.form['email'],password=bcry.generate_password_hash(request.form['password']).decode('utf-8'))
             
@@ -135,7 +136,7 @@ def register():
             db.session.add(profile)
             db.session.commit()
             
-            flash(' registration successful')
+            # flash(' registration successful')
             session['username']=user.username                                                                                               
             return redirect(url_for('home'))
     else:
@@ -168,14 +169,18 @@ dict={}
 @app.route("/forgot",methods=['POST','GET'])
 def forgot():
     if request.method=='POST':
-            email=request.form['email']
-            msg=Message('Hello',sender='program4192@gmail.com',recipients=[email])
-            otp=random.randrange(100000,999999,6)
-            msg.body="hello!, i send you otp for reset password "+str(otp)+" Please don't share with anyone.<br> Thank you!!"
-            mail.send(msg)
-            dict['otp']=otp
-            dict['email']=email
-            return render_template('otp.html')
+            user=User.query.filter_by(username=request.form['username']).first()
+            if user and user.email==request.form['email']:
+                email=request.form['email']
+                msg=Message('Hello',sender='program4192@gmail.com',recipients=[email])
+                otp=random.randrange(100000,999999,6)
+                msg.body="hello!, i send you otp for reset password "+str(otp)+" Please don't share with anyone.<br> Thank you!!"
+                mail.send(msg)
+                dict['otp']=otp
+                dict['email']=email
+                return render_template('otp.html')
+            else:
+                return render_template('forgot.html',msg='User doesn\'t exits! or enter correct details')
         
     return render_template('forgot.html')
 @app.route("/check",methods=['POST','GET'])
@@ -201,8 +206,7 @@ def reset():
 @app.route("/logout")
 def logout():
     session.pop('username', None)
-    msg='This user was logout!'
-    render_template('popup.html',msg=msg)
+    # msg='This user was logout!'
     return redirect(url_for('login'))
     
 
@@ -313,9 +317,8 @@ def addblog():
             file=request.files['file']
 
             if 'file' not in request.files:
-                print('no file')
-            else:
-                print('errorrrrrrrrr')
+                print('No file')
+            
             if file.filename == '':
                 print('no selected file')
             
@@ -355,6 +358,14 @@ def editblog(id):
 @app.route('/delblog/<int:id>',methods=['GET'])
 def delblog(id):
     blog=Blog.query.filter_by(id=id).first()
+    user=User.query.filter_by(id=blog.user_id).first()
+    path=os.path.join(os.getcwd(), 'static\\Images\\',user.username,blog.img)
+    print(path)
+    if os.path.exists(path):
+        os.remove(path)
+    else:
+        print("The file does not exist")
+
     db.session.delete(blog)
     db.session.commit()
     return redirect(url_for('blog'))
@@ -376,20 +387,21 @@ def viewblog(id):
     else:
         user=''
         uid=0
-    return render_template('viewblog.html',b=blog,pc=pic.pic,username=user,uid=uid,Like=like,pr=pr,count=count)
+    try:
+        pic=pic.pic
+    except Exception as e:
+        pic='https://i.pinimg.com/originals/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg'
+    return render_template('viewblog.html',b=blog,pc=pic,username=user,uid=uid,Like=like,pr=pr,count=count)
 
 @app.route('/delaccount')
 def delaccount():
     
     user=User.query.filter_by(username=session['username']).first()
-    blog=Blog.query.filter_by(user_id=user.id).all()
-    for b in blog:
-        b.user_id=0
-        db.session.commit()
-    profile=Profile.query.filter_by(user_id=user.id).all()
-    for b in profile:
-        b.user_id=0
-        db.session.commit()
+    path=os.path.join(os.getcwd(), 'static\\Images\\',user.username)
+    if os.path.exists(path):
+        shutil.rmtree(path, ignore_errors=True)
+    else:
+        print("The folder does not exist")
     db.session.delete(user)
     db.session.commit()
     session.pop('username', None)
@@ -472,9 +484,6 @@ def editrate(id,raty):
     blog.rating=count
     db.session.commit()
     return redirect(path)
-    
-    
-
 
 if __name__ == '__main__':
     app.run(debug=True)

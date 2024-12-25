@@ -16,7 +16,13 @@
 
     <!-- add body -->
     <form action="/forgot" method="POST" id="login-form" class="m-3">
-        <!-- <div class="fw-bold">{{msg}}</div> -->
+        <div class="fw-bold">{{msg}}</div>
+        <div class="row mb-3 ">
+            <label for="iname" class="col-sm-2 col-form-label fw-bold">Username</label>
+            <div class="col-sm-10">
+            <input type="text" class="form-control" id="iname" name="username"  required>
+            </div>
+        </div>
         <div class="row mb-3 ">
             <label for="imail" class="col-sm-2 col-form-label fw-bold">Email</label>
             <div class="col-sm-10">

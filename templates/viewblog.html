@@ -54,13 +54,19 @@
         {% else %}
         <img src="https://i.pinimg.com/originals/75/46/fe/7546feb15edb3f2d46f22a737042b552.jpg" alt="img" width="30" height="24" class="avtar">
         {% endif %}
-
-        {% if username!= '' %}
+        
+        <!-- {% if username!= '' %}
         {{username}}
         {% else %}
         Guest
-        {% endif %}
+        {% endif %} -->
     </a>
+      <ul class="navbar-nav me-auto  ">
+        <li class="nav-item">
+          <a class="nav-link fw-bold fs-5" aria-current="page" href="/home">Home</a>
+        </li>
+      </ul>
+    
 {% endblock %}
 
 {% block body %}
@@ -73,7 +79,7 @@
         {% else %}
         {% set url = url_for('display', filename=b.img,id=b.id) %}
         {% endif %}
-        <img src="{{ url }}" class="card-img-top my-2 px-0 rounded" alt="noimg" style="width: 500px; height: 370px; ">
+        <img src="{{ url }}" class="card-img-top m-2 px-0 rounded" alt="noimg" style="width: 500px; height: 370px; ">
         <div class="card-body">
             {% set pro=pr.query.filter_by(user_id=b.user_id).first() %}
             

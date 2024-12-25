@@ -49,9 +49,12 @@
         <div class="container-fluid mx-4">
             <a class="navbar-brand ms-3 " href="/profile">
                 <img src="{{pic}}" alt="" width="30" height="24" class="avtar">
-                {{username}}
             </a>
-            
+            <ul class="navbar-nav me-auto  ">
+                <li class="nav-item">
+                  <a class="nav-link fw-bold fs-5" aria-current="page" href="/home">Home</a>
+                </li>
+            </ul>
             <div class="d-flex pe-4">
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary ms-2 text-dark fs-5">Logout</a>
             </div>  
