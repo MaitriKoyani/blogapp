@@ -271,7 +271,7 @@ def blog():
     pic=p.pic
     return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr,Rate=rate)
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif','webp'}
 
 def allowed_file(filename):
     print('file allow')
@@ -359,13 +359,15 @@ def editblog(id):
 def delblog(id):
     blog=Blog.query.filter_by(id=id).first()
     user=User.query.filter_by(id=blog.user_id).first()
-    path=os.path.join(os.getcwd(), 'static\\Images\\',user.username,blog.img)
-    print(path)
-    if os.path.exists(path):
-        os.remove(path)
-    else:
-        print("The file does not exist")
-
+    try:
+        path=os.path.join(os.getcwd(), 'static\\Images\\',user.username,blog.img)
+        print(path)
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            print("The file does not exist")
+    except Exception as e:
+        print('file not at there',e)
     db.session.delete(blog)
     db.session.commit()
     return redirect(url_for('blog'))
@@ -397,11 +399,14 @@ def viewblog(id):
 def delaccount():
     
     user=User.query.filter_by(username=session['username']).first()
-    path=os.path.join(os.getcwd(), 'static\\Images\\',user.username)
-    if os.path.exists(path):
-        shutil.rmtree(path, ignore_errors=True)
-    else:
-        print("The folder does not exist")
+    try:
+        path=os.path.join(os.getcwd(), 'static\\Images\\',user.username)
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            print("The folder does not exist")
+    except Exception as e:
+        print('folder not at there',e)
     db.session.delete(user)
     db.session.commit()
     session.pop('username', None)
