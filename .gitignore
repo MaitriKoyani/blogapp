@@ -1,0 +1,6 @@
+# ignore .env
+.env
+# ignore database
+instance/
+# ignore images of users
+Images/
