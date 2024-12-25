@@ -67,7 +67,12 @@
             <!-- <div class="d-inline-block border border-2  m-2 rounded fw-bold" style="background-image: url({{b.img}});height: 400px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);"> -->
                 
                 <div class="card text-light m-5 raty" data-id="{{b.id}}" style="width: auto; opacity: 0.9; background-color: rgba(181, 164, 164, 0.655);height: auto;">
-                    <img src="{{b.img}}" class="card-img-top my-2 px-0 rounded" alt="img" style="width: 500px; height: 370px; ">
+                    {% if b.img | is_network_url %}
+                    {% set url = b.img %}
+                    {% else %}
+                    {% set url = url_for('display', filename=b.img,id=b.id) %}
+                    {% endif %}
+                    <img src="{{ url }}" class="card-img-top my-2 px-0 rounded" alt="noimg" style="width: 500px; height: 370px; ">
                     <div class="card-body">
                         {% set pr=pr.query.filter_by(user_id=b.user_id).first() %}
                         
@@ -85,11 +90,26 @@
                             <i class="fas fa-comments icon m-1 comicon" data-id="{{b.id}}" style="color: white;"></i>
                         </a> 
                         {{b.total_comments}}
-                        <div class="list"> 
+                        <a href="" style="text-decoration: none;" class="toggle-rating">
+                            <div class="rounded d-inline-block " style="background-color: {{ 'green' if b.rating >= 4 else 'orange' if b.rating >= 3 else 'red' }}; width: 50px; color: white;">
+                              <i class="fas fa-star icon m-1" id="rate"></i>{{b.rating}}
+                            </div>
+                          </a> ({{Rate.query.filter_by(blog_id=b.id).count()}})
+                        <div class="list rounded"> 
                             {% set comments = b.comment %}
                             <ul style="list-style-type: none;">
                                 {% for com in comments %}
-                                   <li>{{ com.coment }}</li>
+                                    <li>
+                                        <div class="border-bottom border-2 p-2 ">
+                                            <div class="row ">
+                                                {% set p=pr.query.filter_by(user_id=com.user_id).first() %}
+                                                <div class="col-1 me-2"><img src="{{p.pic}}" alt="" width="30" height="24" class="avtar" style="width: 35px; height: 35px; border: 1px solid white;"></div>
+                                                <div class="col-9">{{p.profile_id}}</div>
+                                                <div class="col-1"><a href="/delcom/{{com.id}}/{{b.id}}" class="btn btn-outline-light btn-sm">❌</a></div>
+                                           </div>
+                                           <div class="ms-5 ps-2">{{com.coment}}</div>
+                                        </div>
+                                    </li>
                                 {% endfor %}
                             </ul>
                             <form class="d-inline-block" method="POST" action="{{ url_for('editcomment', id=b.id) }}">
@@ -121,11 +141,7 @@
                             });
                         </script>
                         
-                      <a href="" style="text-decoration: none;" class="toggle-rating">
-                        <div class="rounded d-inline-block " style="background-color: {{ 'green' if b.rating >= 4 else 'orange' if b.rating >= 3 else 'red' }}; width: 50px; color: white;">
-                          <i class="fas fa-star icon m-1" id="rate"></i>{{b.rating}}
-                        </div>
-                      </a> 
+                      
     
                           <div class="grp d-none ms-3" data-id="{{b.id}}">
                             <div class="stars">

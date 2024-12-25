@@ -69,7 +69,12 @@
         {% block body %}
         <div class="row ">
             {% for b in blog %}
-            <div class="d-inline-block border out border-2  m-2 rounded fw-bold " style="background-image: url({{b.img}});height: 100px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);">
+                {% if b.img | is_network_url %}
+                {% set url = b.img %}
+                {% else %}
+                {% set url = url_for('display', filename=b.img,id=b.id) %}
+                {% endif %}
+                <div class="d-inline-block border out border-2  m-2 rounded fw-bold " style="background-image: url({{url}});height: 100px;width: 400px;background-position: center;background-repeat: no-repeat;background-size: cover; color: rgb(255, 255, 255);">
                 
                 <h5>{{b.title}}</h5>
                 

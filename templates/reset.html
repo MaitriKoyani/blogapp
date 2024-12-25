@@ -1,0 +1,41 @@
+{% extends "index.html" %}
+
+{% block maintitle %}
+
+    Login
+        
+{% endblock %}
+
+{% block title %}
+
+    <!-- add title -->
+    Reset your password here!
+        
+{% endblock %}
+
+{% block body %}
+
+    <!-- add body -->
+    <form action="/reset" method="POST" id="login-form" class="m-3">
+        <div class="fw-bold">{{msg}}</div>
+        <div class="row mb-3">
+            <label for="ipass" class="col-sm-2 col-form-label fw-bold">New password</label>
+            <div class="col-sm-10">
+            <input type="password" class="form-control" id="ipass" name="newpass" required>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <label for="icpass" class="col-sm-2 col-form-label fw-bold">Confirm password</label>
+            <div class="col-sm-10">
+            <input type="password" class="form-control" id="icpass" name="conpass" required>
+            </div>
+        </div>
+        <div class="my-3">
+            <button type="submit" class="btn" style="background-color:rgb(192, 103, 87);">Login</button>
+        </div>
+        
+    </form>
+    <a href="/login" class="btn text-dark fw-bold mb-3 position-absolute top-0 start-0">-> back</a> 
+
+{% endblock %}
+

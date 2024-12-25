@@ -16,7 +16,7 @@
 {% block body %}
 
     <!-- add body -->
-    <form action="#" method="POST" id="login-form" class="row g-3 fs-5 m-3 text-start" >
+    <form action="#" method="POST" id="login-form" class="row g-3 fs-5 m-3 text-start" enctype="multipart/form-data">
         <div class="fw-bold">{{msg}}</div>
         <div class="col-12 ">
             <label for="ititle" class="col-sm-2 col-form-label fw-bold">Title</label>
@@ -27,13 +27,14 @@
         <div class="col-12">
             <label for="iimg" class="col-sm-2 col-form-label fw-bold mb-3">Image</label>
             
-            <!-- <div class="col-6 ms-5">Image upload
-            
-            <input type="file" class="form-control" id="iimg" name="file" >
-            </div><div class="col-6 ms-5 text-center">or</div> -->
+            <div class="col-6 ms-5">Image upload
+
+            <input type="file" class="form-control" id="ifimg" name="file" >
+            </div><div class="col-6 ms-5 text-center">or</div>
+
             <div class="col-6 ms-5">Enter url
     
-            <input type="url" class="form-control" id="iimg" name="img" value="{{b.img}}">
+            <input type="url" class="form-control" id="iuimg" name="url" value="{{b.img}}">
             </div>
         </div>
         <div class="col-12 ">

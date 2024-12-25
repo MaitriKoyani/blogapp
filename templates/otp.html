@@ -1,0 +1,38 @@
+{% extends "index.html" %}
+
+{% block maintitle %}
+
+    Login
+        
+{% endblock %}
+
+{% block title %}
+
+    <!-- add title -->
+    
+        
+{% endblock %}
+
+{% block body %}
+
+    <!-- add body -->
+    <form action="/check" method="POST" id="login-form" class="m-3">
+        <div class="fw-bold">{{msg}}</div>
+        <div class="row mb-3 otp" >
+            <label for="iotp" class="col-sm-2 col-form-label fw-bold">Enter OTP</label>
+            <div class="col-sm-10">
+            <input type="text" class="form-control" id="iotp" name="otp" required>
+            </div>
+        </div>
+        <!-- <div class="my-3">
+            <a href="/forgot" class="btn" style="background-color:rgb(192, 103, 87);">Resent OTP</button>
+        </div> -->
+        <div class="my-3">
+            <button type="submit" class="btn" style="background-color:rgb(192, 103, 87);">Sent OTP</button>
+        </div>
+        
+    </form>
+    <a href="/login" class="btn text-dark fw-bold mb-3 position-absolute top-0 start-0">-> back</a> 
+
+{% endblock %}
+

@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from flask_mail import Mail,Message
 import os
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
 
 app=Flask(__name__)
 bcry= Bcrypt(app)
@@ -22,7 +23,7 @@ app.config['MAIL_PASSWORD'] = os.getenv('my_key')
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
-
+mail=Mail(app)
 
 
 db=SQLAlchemy(app)
@@ -88,16 +89,7 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    import smtplib
 
-    try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)  # Use SSL
-        server.login('program4192@gmail.com', os.getenv('my_key'))  # Replace with your actual app password
-        print("Connected successfully to the SMTP server.")
-        server.quit()
-    except Exception as e:
-        print("Failed to connect to the SMTP server:")
-        
     if 'username' in session:
         return redirect(url_for('home'))
     else:
@@ -176,27 +168,29 @@ dict={}
 @app.route("/forgot",methods=['POST','GET'])
 def forgot():
     if request.method=='POST':
-            emai=request.form['email']
-            
-            msg=Message('Hello',sender='program4192@gmail.com',recipients=[emai])
+            email=request.form['email']
+            msg=Message('Hello',sender='program4192@gmail.com',recipients=[email])
             otp=random.randrange(100000,999999,6)
-            dict[emai]=otp
-            msg.body="hello!, i send you otp for reset password"+str(otp)
+            msg.body="hello!, i send you otp for reset password "+str(otp)+" Please don't share with anyone.<br> Thank you!!"
             mail.send(msg)
+            dict['otp']=otp
+            dict['email']=email
             return render_template('otp.html')
         
     return render_template('forgot.html')
 @app.route("/check",methods=['POST','GET'])
 def check():
     if request.method=='POST':
-        if request.form['otp']==str(dict[request.form['email']]):
+        if request.form['otp']==str(dict['otp']):
             return render_template('reset.html')
+        else:
+            return render_template('otp.html',msg='Wrong OTP')
     return render_template('otp.html')
 @app.route("/reset",methods=['POST','GET'])
 def reset():
     if request.method=='POST':
         if request.form['newpass']==request.form['conpass']:
-            user=User.query.filter_by(email=dict.keys()).first()
+            user=User.query.filter_by(email=dict['email']).first()
             user.password=bcry.generate_password_hash(request.form['newpass']).decode('utf-8')
             db.session.commit()
             return redirect(url_for('login'))
@@ -273,12 +267,72 @@ def blog():
     pic=p.pic
     return render_template('blog.html',blog=blog,coun=coun,username=user.username,pic=pic,uid=user.id,Like=like,pr=pr,Rate=rate)
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    print('file allow')
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_file(file,uname):
+        
+        UPLOAD_FOLDER = os.path.join(os.getcwd(), 'static\\Images\\',uname)
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+        
+        if file and allowed_file(file.filename):
+            
+            filename = secure_filename(file.filename)
+            print(os.path.join(app.config['UPLOAD_FOLDER']))
+            path=os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(path)
+            
+            return filename
+        else:
+            print('file not allow')
+
+@app.route('/display/<filename>/<int:id>')
+def display(filename,id):
+    blog=Blog.query.filter_by(id=id).first()
+    user=User.query.filter_by(id=blog.user_id).first()
+    return redirect(url_for('static', filename='Images/' + user.username + '/' + filename))
+
+@app.template_filter('is_network_url')
+def is_network_url(path):
+    from urllib.parse import urlparse
+    parsed_url = urlparse(path)
+    return bool(parsed_url.scheme) and bool(parsed_url.netloc)
+
 @app.route('/addblog',methods=['POST','GET'])
 def addblog():
     if request.method == 'POST':
         user=User.query.filter_by(username=session['username']).first()
-        blog=Blog(title=request.form['titl'],img=request.form['img'],description=request.form['description'],user_id=user.id)
         
+        try:
+            
+            file=request.files['file']
+
+            if 'file' not in request.files:
+                print('no file')
+            else:
+                print('errorrrrrrrrr')
+            if file.filename == '':
+                print('no selected file')
+            
+            print(file)
+            uname=user.username
+            img=upload_file(file,uname)
+            
+        except Exception as e:
+            try:
+                print('one exception',e)
+                img=request.form['url']
+            except Exception as e:
+               pass
+        if img=='':
+            print('no go to uppp')
+            img="https://www.voxonicstudio.ie/wp-content/uploads/2023/11/he-image-features-a-large-colorful-blog-icon-in-the-center-with-the-word-Blog-jpg.jpg"
+        blog=Blog(title=request.form['titl'],img=img,description=request.form['description'],user_id=user.id)
         db.session.add(blog)
         db.session.commit()
         like=Like(blog_id=blog.id)
