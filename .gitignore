@@ -4,3 +4,6 @@
 instance/
 # ignore images of users
 Images/
+# ignore venv
+venv
+
