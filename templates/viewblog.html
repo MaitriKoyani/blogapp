@@ -130,24 +130,30 @@
           </a>
           
           {% endif %}
+          
             <div class="list rounded"> 
                 {% set comments = b.comment %}
                 <ul style="list-style-type: none;">
-                    {% for com in comments %}
-                    <li>
-                      <div class="border-bottom border-2 p-2 ">
-                          <div class="row ">
-                              {% set p=pr.query.filter_by(user_id=com.user_id).first() %}
-                              <div class="col-1 me-2"><img src="{{p.pic}}" alt="" width="30" height="24" class="avtar" style="width: 35px; height: 35px; border: 1px solid white;"></div>
-                              <div class="col-9">{{p.profile_id}}</div>
-                              {% if uid==com.user_id %}
-                              <div class="col-1"><a href="/delcom/{{com.id}}/{{b.id}}" class="btn btn-outline-light btn-sm">❌</a></div>
-                              {% endif %}
-                         </div>
-                         <div class="ms-5 ps-2">{{com.coment}}</div>
-                      </div>
-                  </li>
-                    {% endfor %}
+                    {% if b.total_comments!=0 %}
+                      {% for com in comments %}
+                      <li>
+                        <div class="border-bottom border-2 p-2 ">
+                            <div class="row ">
+                                {% set p=pr.query.filter_by(user_id=com.user_id).first() %}
+                                <div class="col-1 me-2"><img src="{{p.pic}}" alt="" width="30" height="24" class="avtar" style="width: 35px; height: 35px; border: 1px solid white;"></div>
+                                <div class="col-9">{{p.profile_id}}</div>
+                                {% if uid==com.user_id %}
+                                <div class="col-1"><a href="/delcom/{{com.id}}/{{b.id}}" class="btn btn-outline-light btn-sm">❌</a></div>
+                                {% endif %}
+                          </div>
+                          <div class="ms-5 ps-2">{{com.coment}}</div>
+                        </div>
+                      </li>
+                      {% endfor %}
+                    {% else %}
+                    <div>No comments</div>
+                    {% endif %}
+                    
                 </ul>
                 {% if username %}
           
