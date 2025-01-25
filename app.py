@@ -96,14 +96,15 @@ def index():
     else:
         return render_template('index.html')
 
-
+# register not worked
 @app.route('/register',methods=['POST','GET'])
 def register():
-    msg=''
+    msg='not registered'
     if request.method == 'POST':
         user=User.query.filter_by(username=request.form['username']).first()
         email=User.query.filter_by(email=request.form['email']).first()
         if user and email:
+            print('hi')
             if user.username==email.username:
                 if bcry.check_password_hash (user.password, request.form['password']):
                     # msg='User is already registered!'

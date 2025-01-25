@@ -20,7 +20,7 @@
     <ul class="flashes" style="text-decoration: none; list-style-type: none;">
     {% for message in messages %}
       <li><div class="alert alert-danger" role="alert">
-       {{message}}
+       {{message}}{{msg}}
     </div></li>
     {% endfor %}
     </ul>
@@ -32,7 +32,7 @@
 {% block body %}
 
     <!-- add body -->
-    <form action="#" method="POST" id="register-form" class="m-3">
+    <form action="/register" method="POST" id="register-form" class="m-3">
             
             <div class="row mb-3 ">
                 <label for="iuname" class="col-sm-2 col-form-label fw-bold">Username</label>
